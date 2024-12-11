@@ -14,6 +14,27 @@ def _parse_args():
     return parser.parse_args()
 
 
+def generate_image_path(
+    output_dir: str,
+    page: int,
+    chapter_name: str,
+):
+    if chapter_name:
+        return f"{output_dir}/image/{chapter_name}_{page}.png"
+    return f"{output_dir}/image/{page}.png"
+
+
+def _generate_pdf_path(
+    output_dir: str,
+    start_page: int,
+    end_page: int,
+    chapter_name: str,
+):
+    if chapter_name:
+        return f"{output_dir}/pdf/{chapter_name}_{start_page}_{end_page}.pdf"
+    return f"{output_dir}/pdf/{start_page}_{end_page}.pdf"
+
+
 def image_to_pdf(
     start_page: int,
     end_page: int,
@@ -23,18 +44,20 @@ def image_to_pdf(
     """複数の画像を1つのPDFとして保存"""
     print("画像をPDFに変換します")
     pdf = FPDF()
-    pdf.set_auto_page_break(False) # これをつけないと勝手に次のページが作られて空白ページができてしまう
+    pdf.set_auto_page_break(False)
+
     for page in range(start_page, end_page+1):
-        image = f"{output_dir}/image/{chapter_name}_{page}.png" if chapter_name else f"{output_dir}/image/{page}.png"
+        image = generate_image_path(output_dir, page, chapter_name)
         pdf.add_page()
         pdf.image(image, x=Align.C) # w=pdf.ephなどでフルサイズ指定できる
-    pdf_path = f"{output_dir}/pdf/{chapter_name}_{start_page}_{end_page}.pdf" \
-            if chapter_name else f"{output_dir}/pdf/{start_page}_{end_page}.pdf"
+        print(f"{image} を追加しました")
+
+    pdf_path = _generate_pdf_path(output_dir, start_page, end_page, chapter_name)
     pdf.output(pdf_path)
     print(f"PDFを {pdf_path} に保存しました")
 
 
-def main():
+def _main():
     args = _parse_args()
 
     start_page = args.start_page
@@ -51,4 +74,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    _main()

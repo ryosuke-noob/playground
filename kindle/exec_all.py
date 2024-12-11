@@ -16,7 +16,7 @@ def _parse_args():
     return parser.parse_args()
 
 
-def main():
+def _main():
     args = _parse_args()
 
     start_page = args.start_page
@@ -34,11 +34,11 @@ def main():
     # region = (左上のx座標, 左上のy座標, スクショの横幅, スクショの縦幅)
     region = decide_capture_region()
 
-    capture_screen(start_page, end_page, image_dir, chapter_name, region)
+    capture_screen(start_page, end_page, output_dir, chapter_name, region)
     image_to_pdf(start_page, end_page, output_dir, chapter_name)
 
     print("全ての工程が完了しました")
 
 
 if __name__ == "__main__":
-    main()
+    _main()

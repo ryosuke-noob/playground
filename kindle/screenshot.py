@@ -1,9 +1,11 @@
 import argparse
 import os
+from pathlib import Path
 import time
 
 import pyautogui as pag
 
+from image2pdf import generate_image_path
 
 def _parse_args():
     parser = argparse.ArgumentParser()
@@ -15,22 +17,24 @@ def _parse_args():
     return parser.parse_args()
 
 
-def decide_capture_region(
-    wait_sec: int = 5,
-) -> tuple[int, int, int, int]:
-    """スクショする範囲を決める"""
-    print("カーソルをスクショしたい範囲の左上角に合わせてください")
+def _get_cursor_position(
+    wait_sec: int = 5
+) -> tuple[int, int]:
+    """カーソルの位置を取得"""
     for sec in range(wait_sec, 0, -1):
         print(sec)
         time.sleep(1)
-    x1, y1 = pag.position()
+    return pag.position()
+
+
+def decide_capture_region() -> tuple[int, int, int, int]:
+    """スクショする範囲を決める"""
+    print("カーソルをスクショしたい範囲の左上角に合わせてください")
+    x1, y1 = _get_cursor_position()
     print(f"左上の座標を({x1},{y1})にセットしました")
 
     print("カーソルをスクショしたい範囲の右下角に合わせてください")
-    for sec in range(wait_sec, 0, -1):
-        print(sec)
-        time.sleep(1)
-    x2, y2 = pag.position()
+    x2, y2 = _get_cursor_position()
     print(f"右下の座標を({x2},{y2})にセットしました")
 
     return x1, y1, x2-x1, y2-y1
@@ -39,10 +43,10 @@ def decide_capture_region(
 def capture_screen(
     start_page: int,
     end_page: int,
-    image_dir: str,
+    output_dir: str,
     chapter_name: str,
     region: tuple[int, int, int, int],
-):
+) -> None:
     """スクショし画像として保存"""
     shot_span = 2
     next_page_key = 'right'
@@ -58,16 +62,16 @@ def capture_screen(
     # 実行
     print("撮影を始めます")
     for page in range(start_page, end_page+1):
-        file_name = f"{chapter_name}_{page}.png" if chapter_name else f"{page}.png"
+        image_path = generate_image_path(output_dir, page, chapter_name)
         s = pag.screenshot(region=region)
-        s.save(f"{image_dir}/{file_name}")
+        s.save(image_path)
         pag.keyDown(next_page_key)
         pag.keyUp(next_page_key)
         time.sleep(shot_span)
-    print(f"画像を {image_dir} に保存しました")
+    print(f"画像を {Path(image_path).parents[0]} に保存しました")
 
 
-def main():
+def _main():
     args = _parse_args()
 
     start_page = args.start_page
@@ -84,8 +88,8 @@ def main():
     # region = (左上のx座標, 左上のy座標, スクショの横幅, スクショの縦幅)
     region = decide_capture_region()
 
-    capture_screen(start_page, end_page, image_dir, chapter_name, region)
+    capture_screen(start_page, end_page, output_dir, chapter_name, region)
 
 
 if __name__ == "__main__":
-    main()
+    _main()
