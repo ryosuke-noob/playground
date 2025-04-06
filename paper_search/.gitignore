@@ -1,0 +1,4 @@
+*.env
+
+*.ipynb
+for_cloud_run.py

@@ -1,3 +1,11 @@
+notebook
+powerpoint
+prompt_exam
+py
+w3schools
+
+!.gitignore
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
