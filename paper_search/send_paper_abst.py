@@ -207,6 +207,61 @@ def post_message_to_slack(channel, text, token) -> bool:
         return None
 
 
+def get_page_id(title: str, database_id: str, notion_token: str) -> str:
+    """
+    タイトルからページIDを取得
+    Args:
+        title: タイトル
+        database_id: データベースID
+        notion_token: Notion APIトークン
+    Returns:
+        page_id: ページID
+    """
+    headers = {
+        "Authorization": f"Bearer {notion_token}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+    url = f"https://api.notion.com/v1/databases/{database_id}/query"
+    payload = {"filter": {"property": "Title", "rich_text": {"equals": title}}}
+    response = requests.post(url, json=payload, headers=headers)
+    page_id = response.json()["results"][0]["id"]
+    return page_id
+
+
+def write_to_notion_page(summary: str, page_id: str, notion_token: str = False) -> None:
+    """
+    Notionのページに要約を追記する
+
+    Args:
+        summary: 要約
+        page_id: ページID
+        notion_token: Notion APIトークン
+    """
+    headers = {
+        "Authorization": f"Bearer {notion_token}",
+        "Content-Type": "application/json",
+        "Notion-Version": "2022-06-28",
+    }
+    payload = {"children": []}
+    for line in summary.split('\n'):
+        payload["children"].append({
+            "type": "paragraph",
+            "paragraph": {
+                "rich_text": [
+                    {
+                        "type": "text",
+                        "text": {
+                            "content": line
+                        }
+                    }
+                ]
+            }
+        })
+    url = f"https://api.notion.com/v1/blocks/{page_id}/children"
+    response = requests.patch(url, json=payload, headers=headers)
+
+
 def main():
     load_dotenv()
     
@@ -243,6 +298,9 @@ def main():
 
     if post_paper_to_notion_database(new_paper_result, summary, NOTION_API_KEY, DATABASE_ID):
         print("Posted to Notion successfully.")
+        page_id = get_page_id(new_paper_result.title, DATABASE_ID, NOTION_API_KEY)
+        write_to_notion_page(summary, page_id, NOTION_API_KEY)
+        print("Posted to Notion page successfully.")
     else:
         print("Failed to post to Notion.")
     
