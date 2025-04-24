@@ -1,4 +1,7 @@
 *.env
+samples
+xmls
 
+*test.py
 *.ipynb
 for_cloud_run.py
